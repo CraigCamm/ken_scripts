@@ -35,7 +35,7 @@ echo
 # I output the sample to reflect how bash escapes it's data.
 echo $VALUE | sed -e 's/"/\\"/g;s/$/"/g;s/^/"/g'
 echo
-echo -n "Send these changes to redis? (y/n): "
+echo -n "Send these changes to redis? (y/N): "
 read N
 if [[ "$N" =~ ^[yY]([eE][sS])?$ ]] ; then
     redis-cli -h r1-dev set $KEY $VALUE
