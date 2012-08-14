@@ -6,13 +6,28 @@ if [ $# -gt 1 ] ; then
     echo "Usage: $0 REDIS_KEY"
     exit
 fi
+
 KEY=$1
 
-TMPFILE=$(mktemp /tmp/XXXXXXXXXX.js)
+TMPFILE=$(mktemp /tmp/XXXXXXXXXX.json)
 
 redis-cli -h r1-dev get $1 >$TMPFILE
 sed -i -e 's/{/{\n/g;s/}/\n}/g;s/,/,\n/g;' $TMPFILE
-vim -c 'argdo execute "normal gg=G" | update' $TMPFILE
+while(true) ; do
+    vim -c 'argdo execute "normal gg=G" | update' $TMPFILE
+    if [ -n "$( node --help 2>/dev/null | grep nodejs)" ] ; then
+        REQNAME=$( echo -n $TMPFILE | sed -e 's/\.json$//g' )
+        node -e "var validate = require('$REQNAME');" >/dev/null 2>&1
+        if [ $? -ne 0 ] ; then
+            echo "JSON Invalid! Hit Enter to Edit";
+            read DOESNTMATTER
+        else
+            break
+        fi
+    else
+        break
+    fi
+done
 sed -i -e 's/^[ \t]*//g;' $TMPFILE
 VALUE=$( cat $TMPFILE | tr -d "\n" )
 echo
