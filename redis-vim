@@ -18,7 +18,7 @@ function decode_file()
     linenum=0
     while read line
     do
-        linenum=$(expr $linenum + 1)
+        linenum=$(($linenum+1))
         if [[ $line =~ []}]  ]]
         then
             depth=$(($depth-1))
