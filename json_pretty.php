@@ -30,7 +30,7 @@ function json_minifier($pretty_json)
         if($char=='"') {
             $isstr=!$isstr;
         } else if(!$isstr && $char==' ') {
-            $ugly_json = (substr($ugly_json,0,$ptr).substr($ugly_json,$ptr+1));
+            $ugly_json = (mb_substr($ugly_json,0,$ptr).mb_substr($ugly_json,$ptr+1));
             $ptr--;
         }
     }
