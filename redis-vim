@@ -9,12 +9,43 @@ fi
 
 KEY=$1
 
+function decode_file()
+{
+    TAB='    '
+    FILE=$1
+    sed -i -e 's/\([{[]\)/\1\n/g;s/\([]}]\)/\n\1/g;s/,/,\n/g;' $FILE
+    depth=0
+    linenum=0
+    while read line
+    do
+        linenum=$(expr $linenum + 1)
+        if [[ $line =~ []}]  ]]
+        then
+            depth=$(($depth-1))
+        fi
+        tabs=$(for (( i=0; i < $depth; i++ )); do printf "%s" "$TAB"; done)
+        sed -i -e "${linenum}s/^/$tabs/g" $FILE
+        if [[ $line =~ [[{] ]]
+        then
+            depth=$(($depth+1))
+        fi
+    done < "$FILE"
+}
+
+function encode_file()
+{
+    FILE=$1
+    sed -i -e 's/^[ \t]*//g;' $FILE
+    sed -i -e ':a;N;$!ba;s/\n//g' $FILE
+}
+
 TMPFILE=$(mktemp /tmp/XXXXXXXXXX.json)
 
 redis-cli -h r1-dev get $1 >$TMPFILE
-sed -i -e 's/{/{\n/g;s/}/\n}/g;s/,/,\n/g;' $TMPFILE
+decode_file $TMPFILE
+CHKSUM=$(md5sum $TMPFILE)
 while(true) ; do
-    vim -c 'argdo execute "normal gg=G" | update' $TMPFILE
+    vim $TMPFILE
     if [ -n "$( node --help 2>/dev/null | grep nodejs)" ] ; then
         REQNAME=$( echo -n $TMPFILE | sed -e 's/\.json$//g' )
         node -e "var validate = require('$REQNAME');" >/dev/null 2>&1
@@ -28,16 +59,20 @@ while(true) ; do
         break
     fi
 done
-sed -i -e 's/^[ \t]*//g;' $TMPFILE
-VALUE=$( cat $TMPFILE | tr -d "\n" )
-echo
-# Bash automatically escapes data in an environment variable.
-# I output the sample to reflect how bash escapes it's data.
-echo $VALUE | sed -e 's/"/\\"/g;s/$/"/g;s/^/"/g'
-echo
-echo -n "Send these changes to redis? (y/N): "
-read N
-if [[ "$N" =~ ^[yY]([eE][sS])?$ ]] ; then
-    redis-cli -h r1-dev set $KEY $VALUE
-fi 
+
+if [ "$(md5sum $TMPFILE)" != "$CHKSUM" ] ; then
+    encode_file $TMPFILE
+    echo
+    # Bash automatically escapes data in an environment variable.
+    # I output the sample to reflect how bash escapes it's data.
+    sed -e 's/"/\\"/g;s/$/"/g;s/^/"/g' $TMPFILE
+    echo
+    echo -n "Send these changes to redis? (y/N): "
+    read N
+    if [[ "$N" =~ ^[yY]([eE][sS])?$ ]] ; then
+        redis-cli -h r1-dev set $KEY $(cat $TMPFILE)
+    fi 
+else
+    echo "No Changes Detected, Exiting."
+fi
 rm $TMPFILE
