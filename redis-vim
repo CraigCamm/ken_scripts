@@ -37,6 +37,23 @@ function encode_file()
     FILE=$1
     sed -i -e 's/^[ \t]*//g;' $FILE
     sed -i -e ':a;N;$!ba;s/\n//g' $FILE
+    isstr=0
+    len=$(cat $FILE | wc -m)
+    data=$(cat $FILE)
+    for (( i=0; i < $len; i++ ))
+    do
+        char=${data:$i:1}
+        if [ "$char" == '"' ] ; then
+            if [ $isstr -eq 1 ] ; then isstr=0 ; else isstr=1 ; fi
+        elif [ $isstr -eq 0 -a "$char" == " "  ] ; then
+            echo "#$isstr"
+            data="${data:0:$i}${data:$(($i+1))}"
+            echo $data
+            echo
+            i=$(($i-1))
+        fi
+    done
+    echo -n "$data" >$FILE
 }
 
 TMPFILE=$(mktemp /tmp/XXXXXXXXXX.json)
