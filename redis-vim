@@ -65,8 +65,8 @@ while(true) ; do
     vim $TMPFILE
     if [ -n "$( node --help 2>/dev/null | grep nodejs)" ] ; then
         REQNAME=$( echo -n $TMPFILE | sed -e 's/\.json$//g' )
-        node -e "var validate = require('$REQNAME');" >/dev/null 2>&1
-        if [ $? -ne 0 ] ; then
+        node -e "var validate = require('$REQNAME');" 2>&1 | grep SyntaxError >/dev/null
+        if [ $? -eq 0 ] ; then
             echo "JSON Invalid! Hit Enter to Edit";
             read DOESNTMATTER
         else
