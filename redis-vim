@@ -46,10 +46,7 @@ function encode_file()
         if [ "$char" == '"' ] ; then
             if [ $isstr -eq 1 ] ; then isstr=0 ; else isstr=1 ; fi
         elif [ $isstr -eq 0 -a "$char" == " "  ] ; then
-            echo "#$isstr"
             data="${data:0:$i}${data:$(($i+1))}"
-            echo $data
-            echo
             i=$(($i-1))
         fi
     done
