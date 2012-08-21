@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ $# -ne 2 ] ; then
+    echo "Usage: $0 OLD_NUMBER NEW_NUMBER"
+    exit
+fi
+
+OLD_NUMBER=$1
+NEW_NUMBER=$2
+SERVER="r1-dev"
+
+redis-cli -h $SERVER set INVENTORY_ACTION_${NEW_NUMBER} $( redis-cli -h $SERVER get INVENTORY_ACTION_${OLD_NUMBER} | sed -e "s/tracking_number\":\"[0-9]*/tracking_number\":\"$NEW_NUMBER/" );
+echo "get INVENTORY_ACTION_${NEW_NUMBER}"
+redis-cli -h $SERVER get INVENTORY_ACTION_${NEW_NUMBER}
