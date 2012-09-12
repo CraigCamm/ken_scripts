@@ -1,5 +1,40 @@
 #!/usr/bin/php -q
 <?php
+/*
+    This is a script that acts like grep, but only for one file, it allows you to specify
+    the number of lines you want it to look at.  It keeps a file seek pointer for how far
+    it read into the file, so that you can look at N lines of the file at a time.
+
+    Every time you run this on a file, it keeps track of where it was the last time you 
+    searched the file in question with specific search terms.  So if you:
+
+    quickgrep "SOME ERROR" biglog.log
+
+    Every time you run that command it will give you the lines you didnt read the last time.
+    You can also:
+
+    quickgrep "SOME ERROR" biglog.log --lines=150
+
+    And it will only look at the first 150 lines starting at where you left off the last time
+    you ran that command.  File seek pointers are stored based on filename AND search so if you
+    change the search string you will start back at the top of the file.
+
+    If you do:
+
+    quickgrep "SOME ERROR" biglog.log --pointer
+
+    It will tell you at what point the seek pointer is for that search and the filename where
+    that pointer is being stored.
+
+    You can also do:
+
+    quickgrep "SOME ERROR" biglog.log --pointer=31415926535898
+
+    To set the seek pointer to byte 31415926535898
+
+    --verbose Gives you some extra information in obnoxious hash tag blocks.
+
+ */
 
 // Change this if you want to use a different folder name to store the pointer files.
 ///////////////////////////////////
@@ -16,7 +51,8 @@ function die_with_usage($str=NULL) {
     global $argv;
     if(isset($str)) fwrite(STDERR,"ERROR: {$str}\n\n");
     $usage = "Usage: $argv[0] <regex search> <filename> [options]\n".
-             "    --pointer=#       Reset file seek pointer\n".
+             "    --pointer=#       Reset file seek pointer.\n".
+             "    --pointer         Gives pointer information.\n".
              "    --lines=#         Limit the number of matches to return.\n".
              "                         Next execution will continue at next match.\n".
              "    --verbose         Shows debug info, including the pointer filename\n".
@@ -74,6 +110,7 @@ $ptr_file = $parser_home."/".$hash;
 $arg_ptr = checkopt("pointer");
 if(!file_exists($ptr_file)) file_put_contents($ptr_file,$arg_ptr!==FALSE?$arg_ptr:0) or die("Pointer File {$ptr_file} could not be created.\n");
 $ptr = file_get_contents($ptr_file);
+if($arg_ptr===TRUE) die("The current file seek pointer is: {$ptr}\nPointer reference file for this search: {$ptr_file}\n");
 
 vwrite("############################################################\n");
 vwrite("######### ALL NON-DATA OUTPUT IS WRITTEN TO STDERR #########\n");
