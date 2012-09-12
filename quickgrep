@@ -15,7 +15,7 @@ if(!file_exists($parser_home)) mkdir($parser_home) or die("Folder {$parser_home}
 function die_with_usage($str=NULL) {
     global $argv;
     if(isset($str)) fwrite(STDERR,"ERROR: {$str}\n\n");
-    $usage = "Usage: $argv[0] <filename> <regex search> [options]\n".
+    $usage = "Usage: $argv[0] <regex search> <filename> [options]\n".
              "    --pointer=#       Reset file seek pointer\n".
              "    --lines=#         Limit the number of matches to return.\n".
              "                         Next execution will continue at next match.\n".
@@ -59,11 +59,11 @@ $verbose = checkopt("verbose");
 $lines = checkopt("lines");
 
 // Verify the file exists.
-$file = $argv[1];
+$file = $argv[2];
 if(!file_exists($file)) die_with_usage("File {$file} does not exist or cannot be accessed.");
 
 // Setting Search String.
-$search = $argv[2];
+$search = $argv[1];
 
 // Getting hash for pointer file.
 $hash = sha1($file.$search);
