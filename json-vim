@@ -50,7 +50,7 @@ if [ -a $1 ] ; then
 else
     TMPFILE=$(mktemp /tmp/XXXXXXXXXX.json)
     FILE=$TMPFILE
-    echo -n ${*:1} >$TMP
+    echo -n ${*:1} >$FILE
 fi
 
 decode_file $FILE
