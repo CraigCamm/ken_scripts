@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ $# -ne 4 ] ; then
+    echo "Usage: $0 <username> <password> <host> <database>\n"
+    exit 1
+fi
+
+USER=$1
+PASS=$2
+HOST=$3
+DB=$4
+
+TMPFILE=$(tempfile -s.sql)
+RESULTS=$(tempfile)
+CRC=$(sha1sum $TMPFILE)
+
+vim $TMPFILE -c "execute \"cabbrev w <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'MYSQLQUERY' : 'w')<CR>\""\
+    -c "execute \"cabbrev q qa\""\
+    -c "command! NEWBUFFER new | set buftype=nofile | set bufhidden=hide | setlocal noswapfile | wincmd r | wincmd k"\
+    -c "command! CLEARBUFFER wincmd j | bwipeout | execute \"NEWBUFFER\""\
+    -c "command! MYSQLQUERY write | execute \"CLEARBUFFER\" | wincmd j | execute \"\$read ! mysql -u$USER -p$PASS -h$HOST $DB <$TMPFILE\" | 1d | wincmd k"\
+    -c "execute \"NEWBUFFER\""
+rm $TMPFILE
+rm $RESULTS
+echo "Thank you for using my awesome mysql editor"
