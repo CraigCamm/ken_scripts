@@ -11,8 +11,6 @@ HOST=$3
 DB=$4
 
 TMPFILE=$(tempfile -s.sql)
-RESULTS=$(tempfile)
-CRC=$(sha1sum $TMPFILE)
 
 vim $TMPFILE -c "execute \"cabbrev w <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'MYSQLQUERY' : 'w')<CR>\""\
     -c "execute \"cabbrev q qa\""\
@@ -21,5 +19,4 @@ vim $TMPFILE -c "execute \"cabbrev w <c-r>=(getcmdtype()==':' && getcmdpos()==1 
     -c "command! MYSQLQUERY write | execute \"CLEARBUFFER\" | wincmd j | execute \"\$read ! mysql -u$USER -p$PASS -h$HOST $DB <$TMPFILE\" | 1d | wincmd k"\
     -c "execute \"NEWBUFFER\""
 rm $TMPFILE
-rm $RESULTS
 echo "Thank you for using my awesome mysql editor"
