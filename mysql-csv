@@ -1,0 +1,83 @@
+#!/usr/bin/php -q
+<?php
+
+function getopt_loc($args,$opts) {
+    $options = array();
+
+    // Loop through the options, looking for matching arguments.
+    foreach($opts as $opt) {
+        // Configuration array validation.
+        if(!isset($opt['short']) || !isset($opt['long']) || ( !isset($opt['default']) && !isset($opt['required']) )) die_with_usage();
+        // NULL if required
+        $options[$opt['long']] = ( isset($opt['required']) && ( $opt['required']===true || $opt['required'] == 'true' ) ) ? NULL : $opt['default'];
+        // Loop through the command line arguments to find the current option.
+        foreach($args as $index=>$arg) {
+            if( preg_match("/^--{$opt['long']}=/",$arg) ) {
+                // --option=value
+                $options[$opt['long']] = preg_replace("/--{$opt['long']}=/","",$arg);
+            } else if( preg_match("/^-{$opt['short']}.+/",$arg) ) {
+                // -oValue    
+                $options[$opt['long']] = preg_replace("/^-{$opt['short']}/","",$arg);
+            } else if( preg_match("/^[-]*{$opt['long']}$/",$arg) || preg_match("/^-{$opt['short']}$/",$arg) ) {
+                // option or -option or --option or -o
+                $options[$opt['long']] = true;
+            }
+        }
+        // Required Value Validation
+        if($options[$opt['long']]===NULL) die_with_usage();
+    }
+    $options['query'] = array_pop($args);
+    if(substr($options['query'],0,1)=="-") die_with_usage();
+    return $options;
+}
+
+function die_with_usage() {
+    global $argv;
+    $usage = "Usage: {$argv[0]} -uUSERNAME -pPASSWORD -hHOSTNAME -dDATABASE 'QUERY'\n";
+    die($usage);
+}
+
+// This is to be overloaded with configuration meta-data.
+// Below is a sample
+$options_configuration = array(
+    'user' => array(
+        'short' => 'u',
+        'long' => 'user',
+        'required' => true,
+    ),  
+    'password' => array(
+        'short' => 'p',
+        'long' => 'password',
+        'default' => FALSE,
+    ),  
+    'hostname' => array(
+        'short' => 'h',
+        'long' => 'host',
+        'default' => FALSE,
+    ),
+    'database' => array(
+        'short' => 'd',
+        'long' => 'database',
+        'default' => FALSE,
+    ),
+);
+
+
+$opts = (object)getopt_loc($argv,$options_configuration);
+$conn = new mysqli(
+    $opts->host,
+    $opts->user,
+    $opts->password?$opts->password:NULL,
+    $opts->database?$opts->database:NULL);
+$result = $conn->query($opts->query) or die($conn->error.__LINE__);
+$field_obj = $result->fetch_fields();
+$fields = array();
+foreach($field_obj as $field)
+    $fields[] = $field->name;
+
+if($result->num_rows > 0) {
+    fputcsv(STDOUT,$fields);
+    while($row = $result->fetch_assoc()) {
+        fputcsv(STDOUT,$row);
+    }
+}
