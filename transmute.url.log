@@ -1,0 +1,9 @@
+# quickgrep pattern file
+# For turning KEN DEBUG lines in url.log on browser0 into 
+# a mysql insert.
+/^[^\[]*\[//
+/^(\d)\|:10] KEN DEBUG /$1|||/
+/(?<!\\\)'/\\'/
+/\|\|\|/','/
+/^/('/
+/$/')

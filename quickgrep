@@ -51,12 +51,12 @@ function die_with_usage($str=NULL) {
     global $argv;
     if(isset($str)) fwrite(STDERR,"ERROR: {$str}\n\n");
     $usage = "Usage: $argv[0] <regex search> <filename> [options]\n".
-             "    --pointer=#       Reset file seek pointer.\n".
-             "    --pointer         Gives pointer information.\n".
-             "    --lines=#         Limit the number of matches to return.\n".
-             "                         Next execution will continue at next match.\n".
-             "    --verbose         Shows debug info, including the pointer filename\n".
-             "    --help            Shows this message.\n";
+        "    --pointer=#       Set/Reset file seek pointer.\n".
+        "    --pointer         Gives pointer information.\n".
+        "    --lines=#         Limit the number of matches to return.\n".
+        "                         Next execution will continue at next match.\n".
+        "    --verbose         Shows debug info, including the pointer filename\n".
+        "    --help            Shows this message.\n";
     die($usage);
 }
 
@@ -83,16 +83,43 @@ function vwrite($str) {
     }
 }
 
-// VERIFICATION
+// When passed an array of PCRE patterns it will loop through them on each row to format data.
+function transmute($str,$pattern_array) {
+    foreach($pattern_array as $pattern) {
+        $pat = preg_split('/(?<!\\\)\//',$pattern);
+        $search = $pat[1];
+        $replace = $pat[2];
+        $commands = $pat[3];
+        $str = preg_replace("/{$search}/$commands",$replace,$str);
+    }   
+    return $str;
+}
+
+// ARGUMENT VERIFICATION
 
 // Not enough arguments.
 if($argc<2) die_with_usage();
+
 // Asking for help.
 if(checkopt("help")===TRUE) die_with_usage();
+
 // Set verbose.
 $verbose = checkopt("verbose");
+
 // Set lines.
 $lines = checkopt("lines");
+
+// Get transmute file
+$transmute = checkopt("transmute");
+$patterns = array();
+if($transmute===TRUE) die_with_usage();
+if(file_exists($transmute)) {
+    $lines = file($transmute);
+    foreach($lines as $line) {
+        if(!preg_match("/^ *\t*#/",$line))
+            $patterns[] = $line;
+    }
+}
 
 // Verify the file exists.
 $file = $argv[2];
@@ -106,10 +133,20 @@ $hash = sha1($file.$search);
 $ptr_file = $parser_home."/".$hash;
 
 // Seeing if we can either open or create the pointer file.
-// Tertiary craziness in the put_contents is just for if you use --pointer=# or not so we can save that default.
 $arg_ptr = checkopt("pointer");
-if(!file_exists($ptr_file)) file_put_contents($ptr_file,$arg_ptr!==FALSE?$arg_ptr:0) or die("Pointer File {$ptr_file} could not be created.\n");
+// Just want the file pointer output
+// Put the new pointer in the file.
+if($arg_ptr!==FALSE) {
+    file_put_contents($ptr_file,$arg_ptr);
+    die("Seek pointer has been set to {$arg_ptr} for this search.\n");
+} 
+// Create the file if it does not exist.
+if(!file_exists($ptr_file) ) {
+    file_put_contents($ptr_file,0);
+}
+// Get the current poitner from the file.
 $ptr = file_get_contents($ptr_file);
+// Display pointer info.
 if($arg_ptr===TRUE) die("The current file seek pointer is: {$ptr}\nPointer reference file for this search: {$ptr_file}\n");
 
 vwrite("############################################################\n");
@@ -142,6 +179,8 @@ while(!feof($f)) {
             // Skipping over \r\n because they pollute our logs.
             if($char=="\n" && !preg_match("/\r/",$eol_buffer)) {
                 if(preg_match("/{$search}/",$line_buffer)) {
+                    if($transmute!==FALSE)
+                        $line_buffer = transmute($patterns,$line_buffer);
                     fwrite(STDOUT,$line_buffer."\n");
                 }
                 $line_buffer="";
