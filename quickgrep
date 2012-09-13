@@ -34,6 +34,15 @@
 
     --verbose Gives you some extra information in obnoxious hash tag blocks.
 
+    --results works like lines, but stops when you have output a number of results, regardless
+    of how many lines you have parsed.
+
+    --transmute allows you to specify a file with lines of preg_replace valid search/replace strings
+    in the format of: 
+    
+    /search/replace/mi
+
+    It will run these from top to bottom on each line to change the output format of your data.
  */
 
 // Change this if you want to use a different folder name to store the pointer files.
@@ -53,8 +62,9 @@ function die_with_usage($str=NULL) {
     $usage = "Usage: $argv[0] <regex search> <filename> [options]\n".
         "    --pointer=#       Set/Reset file seek pointer.\n".
         "    --pointer         Gives pointer information.\n".
-        "    --lines=#         Limit the number of matches to return.\n".
-        "                         Next execution will continue at next match.\n".
+        "    --lines=#         Limit the number of lines to parse.\n".
+        "    --results=#       Limit the number of matches to return.\n".
+        "    --transmute=file  Limit the number of matches to return.\n".
         "    --verbose         Shows debug info, including the pointer filename\n".
         "    --help            Shows this message.\n";
     die($usage);
@@ -106,8 +116,10 @@ if(checkopt("help")===TRUE) die_with_usage();
 // Set verbose.
 $verbose = checkopt("verbose");
 
-// Set lines.
+// Set line limit.
 $lines = checkopt("lines");
+// Set result limit.
+$results = checkopt("results");
 
 // Get transmute file
 $transmute = checkopt("transmute");
@@ -129,7 +141,7 @@ if(!file_exists($file)) die_with_usage("File {$file} does not exist or cannot be
 $search = $argv[1];
 
 // Getting hash for pointer file.
-$hash = sha1($file.$search);
+$hash = sha1(basename($file).$search);
 $ptr_file = $parser_home."/".$hash;
 
 // Seeing if we can either open or create the pointer file.
@@ -166,6 +178,7 @@ $line_buffer = "";
 $eol_buffer = "";
 
 $linecnt=0;
+$resultcnt=0;
 
 // Parse Lines
 while(!feof($f)) {
@@ -180,8 +193,13 @@ while(!feof($f)) {
             if($char=="\n" && !preg_match("/\r/",$eol_buffer)) {
                 if(preg_match("/{$search}/",$line_buffer)) {
                     if($transmute!==FALSE)
-                        $line_buffer = transmute($patterns,$line_buffer);
+                        $line_buffer = transmute($line_buffer,$patterns);
                     fwrite(STDOUT,$line_buffer."\n");
+                    $resultcnt++;
+                    if($results!==FALSE && $resultcnt>=$results) {
+                        $ptr-=strlen($chunk)-$i;
+                        break 2;
+                    }
                 }
                 $line_buffer="";
                 $linecnt++;
