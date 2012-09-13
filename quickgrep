@@ -164,7 +164,7 @@ if($arg_ptr===TRUE) die("The current file seek pointer is: {$ptr}\nPointer refer
 vwrite("############################################################\n");
 vwrite("######### ALL NON-DATA OUTPUT IS WRITTEN TO STDERR #########\n");
 vwrite("############################################################\n");
-vwrite("File used to track seek poitners for this search:\n");
+vwrite("File used to track seek pointers for this search:\n");
 vwrite("{$ptr_file}.\n");
 vwrite("############################################################\n");
 vwrite("Current Seek Pointer: {$ptr}\n");
