@@ -189,7 +189,7 @@ class Interactive_PHP {
                     break;
                 case "\n": // Enter
                     $str = $this->current;
-                    if($str=="export") {
+                    if($str=="export" || preg_match("/exit(.*?)/",$str)) {
                         echo "\n";
                         echo "\n";
                         echo "<?php\n";
