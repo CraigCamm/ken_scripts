@@ -42,8 +42,19 @@ if [ ! -f "./$TODAY" ] ; then
     rm /usr/local/netbeans-nightly
     ln -s /usr/local/netbeans-dev-$TAG/bin/netbeans /usr/local/netbeans-nightly
     mkdir -p $HOME/.netbeans/dev/update/download
+    mkdir -p $HOME/.netbeans/dev/config/Preferences/org/netbeans/modules
     cp $PLUGINS $HOME/.netbeans/dev/update/download
-    NUSER=$(stat -c %U $HOME/.netbeans/dev/)
-    NGROUP=$(stat -c %U $HOME/.netbeans/dev/)
-    chown $NUSER.$NGROUP $HOME/.netbeans/dev/ -R
+    NUSER=$(stat -c %U $HOME)
+    NGROUP=$(stat -c %U $HOME)
+    chown $NUSER.$NGROUP $HOME/.netbeans -R
+    CONFIG=$HOME/.netbeans/dev/config/Preferences/org/netbeans/modules/jvi.properties
+    touch $CONFIG
+    chown $NUSER.$NGROUP $CONFIG
+    echo "viAutoPopupCcName=false" >>$CONFIG
+    echo "viAutoPopupCcName=false" >>$CONFIG
+    echo "viBackspace=2" >>$CONFIG
+    echo "viExpandTabs=true" >>$CONFIG
+    echo "viShiftRound=true" >>$CONFIG
+    echo "viShiftWidth=4" >>$CONFIG
+    echo "viTabStop=4" >>$CONFIG
 fi
