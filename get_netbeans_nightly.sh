@@ -13,17 +13,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+# Config
 REPO="http://bits.netbeans.org/download/trunk/nightly/latest/bundles/"
-NIGHTLY="/root/netbeans-nightly/"
+DOWNLOAD=/root/netbeans-nightly
+HOME=/home/kmitchner
+JVI=$DOWNLOAD/nbvi-1.4.6
+
+
+if [ ! -d $JVI ] ; then
+    wget --directory-prefix=$DOWNLOAD http://downloads.sourceforge.net/project/jvi/jVi-for-NetBeans/NetBeans-7.0/nbvi-1.4.6.zip
+    unzip $DOWNLOAD/nbvi-1.4.6.zip -d $DOWNLOAD
+fi
+
+PLUGINS=$(ls $JVI/*.nbm)
 
 TODAY=$(curl $REPO 2>/dev/null | sed 's/^.*href="\(.*\)">.*$/\1/' | grep '[0-9]\-linux.sh')
 TAG=${TODAY//[^0-9]/}
 
 if [ ! -f "./$TODAY" ] ; then
-    wget $REPO$TODAY --output-file=/root/netbeans-nightly/$TODAY
-    chmod u+x $NIGHTLY$TODAY
-    $NIGHTLY$TODAY --silent
-    echo $TODAY >$NIGHTLY"current"
+    # Get nightly Netbeans Build
+    wget --directory-prefix=$DOWNLOAD $REPO$TODAY
+    # Make it executable
+    LAST=$(ls /usr/local/ | grep netbeans-dev- | tail -n1)
+    mv $HOME/.netbeans $HOME/.$LAST
+    sh $DOWNLOAD$TODAY --silent
+    echo $TODAY >$DOWNLOAD"current"
     rm /usr/local/netbeans-nightly
     ln -s /usr/local/netbeans-dev-$TAG/bin/netbeans /usr/local/netbeans-nightly
+    mkdir -p $HOME/.netbeans/dev/update/download
+    cp $PLUGINS $HOME/.netbeans/dev/update/download
+    NUSER=$(stat -c %U $HOME/.netbeans/dev/)
+    NGROUP=$(stat -c %U $HOME/.netbeans/dev/)
+    chown $NUSER.$NGROUP $HOME/.netbeans/dev/ -R
 fi
