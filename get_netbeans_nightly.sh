@@ -31,14 +31,14 @@ PLUGINS=$(ls $JVI/*.nbm)
 TODAY=$(curl $REPO 2>/dev/null | sed 's/^.*href="\(.*\)">.*$/\1/' | grep '[0-9]\-linux.sh')
 TAG=${TODAY//[^0-9]/}
 
-if [ ! -f "./$TODAY" ] ; then
+if [ ! -f "$DOWNLOAD/$TODAY" ] ; then
     # Get nightly Netbeans Build
     wget --directory-prefix=$DOWNLOAD $REPO$TODAY
     # Make it executable
     LAST=$(ls /usr/local/ | grep netbeans-dev- | tail -n1)
     mv $HOME/.netbeans $HOME/.$LAST
-    sh $DOWNLOAD$TODAY --silent
-    echo $TODAY >$DOWNLOAD"current"
+    sh $DOWNLOAD/$TODAY --silent
+    echo $TODAY >$DOWNLOAD/"current"
     rm /usr/local/netbeans-nightly
     ln -s /usr/local/netbeans-dev-$TAG/bin/netbeans /usr/local/netbeans-nightly
     mkdir -p $HOME/.netbeans/dev/update/download
