@@ -57,4 +57,5 @@ if [ ! -f "$DOWNLOAD/$TODAY" ] ; then
     echo "viShiftRound=true" >>$CONFIG
     echo "viShiftWidth=4" >>$CONFIG
     echo "viTabStop=4" >>$CONFIG
+    echo "viNumber=true" >>$CONFIG
 fi
