@@ -13,5 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rsync -v -e ssh ~/Dropbox/_vimrc $@:~/.craigvimrc >/dev/null 2>&1
+regex='[^ ]+@[^ ]+'
+
+for opt in $@
+do
+    if [[ $opt =~ $regex ]]
+    then
+        login=$opt
+    fi
+done
+
+rsync -v -e ssh ~/Dropbox/_vimrc $login:~/.craigvimrc >/dev/null 2>&1
 exec ssh -A "$@" -t "VIMINIT='source ~/.craigvimrc' bash -l"
