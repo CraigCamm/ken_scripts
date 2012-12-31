@@ -13,5 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rsync -v -e ssh ~/Dropbox/_vimrc $@:~/.kenvimrc >/dev/null 2>&1
-exec ssh -A "$@" -t "VIMINIT='source ~/.kenvimrc' bash -l"
+rsync -v -e ssh ~/Dropbox/_vimrc $@:~/.craigvimrc >/dev/null 2>&1
+exec ssh -A "$@" -t "VIMINIT='source ~/.craigvimrc' bash -l"
