@@ -13,8 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ "$1" = "-A" ] ; then
-    eval `ssh-agent`
-    ssh-add
-fi
-exec ssh "$@"
+rsync -v -e ssh ~/Dropbox/_vimrc $@:~/.kenvimrc >/dev/null 2>&1
+exec ssh -A "$@" -t "VIMINIT='source ~/.kenvimrc' bash -l"
